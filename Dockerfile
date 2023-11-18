@@ -8,6 +8,9 @@ RUN apt-get update && \
 # Install curl and wget
 RUN apt-get install -y curl wget
 
+# Install vim
+RUN apt-get install -y vim
+
 # Download and include synopsys-detect-9.1.0.jar
 RUN mkdir /opt/synopsys && \
     wget -O /opt/synopsys/synopsys-detect-9.1.0.jar \
