@@ -29,4 +29,6 @@ COPY application.properties .
 # Copy detect.sh
 COPY detect.sh .
 
+RUN chmod u+x detect.sh
+
 # CMD ["java", "-jar", "synopsys-detect-9.1.0.jar"]
