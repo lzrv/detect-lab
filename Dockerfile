@@ -26,5 +26,7 @@ WORKDIR /opt/synopsys
 # Copy the application.properties file to the working directory
 COPY application.properties .
 
-# Command to run when the container starts
-CMD ["java", "-jar", "synopsys-detect-9.1.0.jar"]
+# Copy detect.sh
+COPY detect.sh .
+
+# CMD ["java", "-jar", "synopsys-detect-9.1.0.jar"]
