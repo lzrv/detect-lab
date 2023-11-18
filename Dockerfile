@@ -13,6 +13,10 @@ RUN mkdir /opt/synopsys && \
     wget -O /opt/synopsys/synopsys-detect-9.1.0.jar \
     https://sig-repo.synopsys.com/artifactory/bds-integrations-release/com/synopsys/integration/synopsys-detect/9.1.0/synopsys-detect-9.1.0.jar
 
+# Clone the Tiredful-API repository
+RUN apt-get install -y git && \
+    git clone https://github.com/payatu/Tiredful-API /opt/tiredful-api
+
 # Set the working directory
 WORKDIR /opt/synopsys
 
