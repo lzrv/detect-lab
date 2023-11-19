@@ -18,7 +18,12 @@ RUN mkdir /opt/synopsys && \
 
 # Clone the Tiredful-API repository
 RUN apt-get install -y git && \
-    git clone https://github.com/payatu/Tiredful-API /opt/tiredful-api
+    git clone https://github.com/payatu/Tiredful-API \
+	/opt/scan_targets/tiredful-api
+
+# Clone synopsys-detect source code
+RUN git clone https://github.com/blackducksoftware/synopsys-detect \
+	/opt/scan_targets/synopsys-detect
 
 # Set the working directory
 WORKDIR /opt/synopsys
