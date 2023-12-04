@@ -5,8 +5,8 @@ FROM debian:12.2
 RUN apt-get update && \
     apt-get install -y openjdk-17-jdk
 
-# Install curl and wget
-RUN apt-get install -y curl wget
+# Install zip, curl, and wget
+RUN apt-get install -y zip curl wget
 
 # Install vim
 RUN apt-get install -y vim
