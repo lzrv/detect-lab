@@ -28,6 +28,10 @@ RUN apt-get install -y git && \
 RUN git clone https://github.com/blackducksoftware/synopsys-detect \
 	/opt/scan_targets/synopsys-detect
 
+# Clone Express.js as a sample NPM project for NPM detector testing
+RUN git clone https://github.com/expressjs/express \
+	/opt/scan_targets/express
+
 # Set the working directory
 WORKDIR /opt/blackduck
 
