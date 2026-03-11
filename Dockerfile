@@ -11,10 +11,10 @@ RUN apt-get install -y zip curl wget
 # Install vim
 RUN apt-get install -y vim
 
-# Download and include synopsys-detect-9.1.0.jar
+# Download and include detect-11.2.1.jar
 RUN mkdir /opt/blackduck && \
-    wget -O /opt/blackduck/synopsys-detect-9.1.0.jar \
-    https://sig-repo.synopsys.com/artifactory/bds-integrations-release/com/synopsys/integration/synopsys-detect/9.1.0/synopsys-detect-9.1.0.jar
+    wget -O /opt/blackduck/detect-11.2.1.jar \
+    https://repo.blackduck.com/bds-integrations-release/com/blackduck/integration/detect/11.2.1/detect-11.2.1.jar
 
 # Clone the Tiredful-API repository
 RUN apt-get install -y git && \
@@ -36,4 +36,4 @@ COPY detect.sh .
 
 RUN chmod u+x detect.sh
 
-# CMD ["java", "-jar", "synopsys-detect-9.1.0.jar"]
+# CMD ["java", "-jar", "detect-11.2.1.jar"]

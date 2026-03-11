@@ -1,2 +1,2 @@
 source env.sh
-java -jar synopsys-detect-9.1.0.jar
+java -jar detect-11.2.1.jar
