@@ -1,5 +1,5 @@
-# Use Debian 12.2 as the base image
-FROM debian:12.2
+# Use Debian 13 (trixie) as the base image
+FROM debian:trixie
 
 # Install OpenJDK 17
 RUN apt-get update && \
@@ -11,10 +11,13 @@ RUN apt-get install -y zip curl wget
 # Install vim
 RUN apt-get install -y vim
 
-# Download and include synopsys-detect-9.1.0.jar
-RUN mkdir /opt/synopsys && \
-    wget -O /opt/synopsys/synopsys-detect-9.1.0.jar \
-    https://sig-repo.synopsys.com/artifactory/bds-integrations-release/com/synopsys/integration/synopsys-detect/9.1.0/synopsys-detect-9.1.0.jar
+# Install Node.js and npm for NPM detector testing
+RUN apt-get install -y nodejs npm
+
+# Download and include detect-11.2.1.jar
+RUN mkdir /opt/blackduck && \
+    wget -O /opt/blackduck/detect-11.2.1.jar \
+    https://repo.blackduck.com/bds-integrations-release/com/blackduck/integration/detect/11.2.1/detect-11.2.1.jar
 
 # Clone the Tiredful-API repository
 RUN apt-get install -y git && \
@@ -25,8 +28,12 @@ RUN apt-get install -y git && \
 RUN git clone https://github.com/blackducksoftware/synopsys-detect \
 	/opt/scan_targets/synopsys-detect
 
+# Clone Express.js as a sample NPM project for NPM detector testing
+RUN git clone https://github.com/expressjs/express \
+	/opt/scan_targets/express
+
 # Set the working directory
-WORKDIR /opt/synopsys
+WORKDIR /opt/blackduck
 
 # Copy the application.properties file to the working directory
 COPY application.properties .
@@ -36,4 +43,4 @@ COPY detect.sh .
 
 RUN chmod u+x detect.sh
 
-# CMD ["java", "-jar", "synopsys-detect-9.1.0.jar"]
+# CMD ["java", "-jar", "detect-11.2.1.jar"]
