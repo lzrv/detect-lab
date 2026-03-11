@@ -24,9 +24,9 @@ RUN apt-get install -y git && \
     git clone https://github.com/payatu/Tiredful-API \
 	/opt/scan_targets/tiredful-api
 
-# Clone synopsys-detect source code
-RUN git clone https://github.com/blackducksoftware/synopsys-detect \
-	/opt/scan_targets/synopsys-detect
+# Clone detect source code
+RUN git clone https://github.com/blackducksoftware/detect \
+	/opt/scan_targets/detect
 
 # Clone Express.js as a sample NPM project for NPM detector testing
 RUN git clone https://github.com/expressjs/express \
