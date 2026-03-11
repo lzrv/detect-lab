@@ -1,9 +1,9 @@
 # Use Debian 13 (trixie) as the base image
 FROM debian:trixie
 
-# Install OpenJDK 17
+# Install OpenJDK 21
 RUN apt-get update && \
-    apt-get install -y openjdk-17-jdk
+    apt-get install -y openjdk-21-jdk
 
 # Install zip, curl, and wget
 RUN apt-get install -y zip curl wget
