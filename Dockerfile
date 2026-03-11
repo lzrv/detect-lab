@@ -1,5 +1,5 @@
-# Use Debian 13 (trixie) as the base image
-FROM debian:trixie
+# Use Debian 12 (bookworm) as the base image
+FROM debian:bookworm
 
 # Install OpenJDK 17
 RUN apt-get update && \
