@@ -11,6 +11,9 @@ RUN apt-get install -y zip curl wget
 # Install vim
 RUN apt-get install -y vim
 
+# Install Node.js and npm for NPM detector testing
+RUN apt-get install -y nodejs npm
+
 # Download and include detect-11.2.1.jar
 RUN mkdir /opt/blackduck && \
     wget -O /opt/blackduck/detect-11.2.1.jar \
