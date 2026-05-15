@@ -82,9 +82,9 @@ Detectors covered: Maven CLI, Gradle Native Inspector, Sbt Native Inspector, Ivy
 Install Go via dnf. Install Rust toolchain via rustup (non-interactive). Add cargo to PATH.
 Detectors covered: GoMod CLI, Go Mod File, Cargo CLI, Cargo Lock.
 
-- [ ] Add `RUN dnf install -y golang && dnf clean all`
-- [ ] Add `RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path`
-- [ ] Add `ENV PATH="/root/.cargo/bin:$PATH"`
+- [x] Add `RUN dnf install -y golang && dnf clean all`
+- [x] Add `RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path`
+- [x] Add `ENV PATH="/root/.cargo/bin:$PATH"`
 
 ### Task 6: Add .NET SDK (NuGet)
 

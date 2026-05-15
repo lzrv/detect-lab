@@ -33,6 +33,12 @@ RUN wget -q https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-b
 RUN curl -fL https://github.com/sbt/sbt/releases/download/v1.10.11/sbt-1.10.11.tgz | tar -xz -C /opt && \
     ln -s /opt/sbt/bin/sbt /usr/local/bin/sbt
 
+RUN dnf install -y golang && dnf clean all
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+
+ENV PATH="/root/.cargo/bin:$PATH"
+
 # Clone the Tiredful-API repository
 RUN git clone https://github.com/payatu/Tiredful-API \
     /opt/scan_targets/tiredful-api
