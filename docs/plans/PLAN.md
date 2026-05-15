@@ -1,522 +1,221 @@
-# detect-lab Expansion Plan
+# Plan: detect-lab Fedora Migration and Multi-PM Expansion
 
-## Context
+## Overview
 
-**Repo:** `~/src/detect-lab`  
-**Goal:** Modernize the lab container (Debian → Fedora 44, Detect 11.2.1 → 11.4.2) and expand it into a comprehensive multi-PM lab — every package manager Detect supports gets an installed toolchain and a representative open-source scan target. A unified wrapper script ties it all together.
+Modernize the detect-lab container from Debian to Fedora 44, upgrade Detect CLI from 11.2.1
+to 11.4.2, and expand the lab into a comprehensive multi-package-manager environment covering
+every detector supported by Detect 11.4.x.
 
-**Why Fedora:** User standardizes on Fedora/RHEL across lab environments and AMIs. Most BD SCA customers run RHEL-based distros, so Fedora coverage validates more real-world scanner paths than Debian.
+**Architecture decisions:**
+- Base image: `fedora:44` (replaces `debian:trixie`). All `apt-get` calls become `dnf`.
+- Detect JAR: 11.4.2 downloaded from `repo.blackduck.com/bds-integrations-release/...`.
+- Layer strategy: one RUN block per PM toolchain — ~55 layers total, well under Docker's 127
+  limit. Keeps build cache granular so changing one toolchain doesn't invalidate others.
+- Image size: ~8–12 GB uncompressed by design. This is a lab, not a production image.
+- Scan targets: cloned with `--depth=1` in Dockerfile into `/opt/scan_targets/<pm>/<repo>`.
+  Local `scan_targets/` tree in the repo holds per-PM READMEs with rationale and pre-scan steps.
+- Wrapper script `scan.sh` uses standard Detect env vars (`BLACKDUCK_URL`, `BLACKDUCK_API_TOKEN`).
+  `--all` flag scans all PMs and creates projects named `<pm>-detect-11.4.2-test` on the instance.
 
----
+**Key Fedora package name differences from Debian:**
+- `openjdk-21-jdk` → `java-21-openjdk-devel`
+- `apt-get install` → `dnf install -y` + `dnf clean all` in same layer
 
-## Current State (snapshot)
+**Open items to verify during implementation:**
+- eShopOnWeb: confirm `.sln`/`.csproj` is reachable at `--detect.detector.search.depth=2`
+- R/packrat: verify `rstudio/shiny` has a committed `packrat.lock`; substitute `rstudio/packrat` if not
+- conda target: `anaconda-client` needs `conda env create` before Conda CLI detector fires — document in README
+- .NET on Fedora: Microsoft repo `.repo` URL uses `%fedora` RPM macro — validate for Fedora 44
+- Bitbake: no scan target cloned; stub + README only (Yocto impractical in a general container)
+- Swift: commented out by default (~2 GB layer); user can uncomment to enable
+- CocoaPods: macOS/iOS only; not included
 
-| Item | Current |
-|------|---------|
-| Base image | `debian:trixie` |
-| Detect version | 11.2.1 |
-| Package managers installed | Node.js / npm only |
-| Scan targets (in container) | Tiredful-API, detect source, express.js |
-| `scan_targets/` dir in repo | Does not exist |
-| Wrapper script | `detect.sh` — minimal, reads `env.sh`, runs JAR |
-| docker-compose | None |
+## Validation Commands
 
----
-
-## Architecture Decisions
-
-### Layer strategy — keep layers split, do NOT squash
-
-For a lab image, build-cache speed during iteration outweighs image size compactness. One RUN block per package manager toolchain means:
-- Changing a single toolchain (e.g., upgrading Go) rebuilds only that layer and everything after it
-- Unrelated toolchains hit cache and don't re-download
-
-Layer count estimate: ~55 RUN blocks. Docker's hard limit is 127. Not a problem.
-
-**Trade-off acknowledged:** Final image will be large (estimated 6–12 GB uncompressed). This is by design — it's a lab, not a production image. No multi-stage build needed.
-
-### Scan targets — cloned in Dockerfile, documented locally
-
-- `scan_targets/` directory in the repo contains a `README.md` per package manager with the chosen project's URL, why it was chosen, and any pre-scan setup steps.
-- The Dockerfile `git clone`s each target into `/opt/scan_targets/<pm>/` during build.
-- This keeps the repo small while making intent readable.
-
-### Wrapper script — environment-variable-native
-
-Detect's standard env vars (`BLACKDUCK_URL`, `BLACKDUCK_API_TOKEN`) are the primary interface. CLI flags (`--url`, `--token`) are supported as overrides. The `--all` flag runs all PM scans sequentially and creates per-PM projects on the target BD SCA instance.
+- `docker build -t detect-lab:11.4.2 .`
+- `docker run --rm detect-lab:11.4.2 java -jar /opt/blackduck/detect-11.4.2.jar --help | head -5`
 
 ---
 
-## Phase 1 — Fedora Base + Detect Upgrade
+### Task 1: Switch to Fedora base image and update system packages
 
-**Files changed:** `Dockerfile`
+Replace the `debian:trixie` base with `fedora:44`. Rewrite the initial RUN blocks using `dnf`
+instead of `apt-get`. Install Java 21 (`java-21-openjdk-devel`) and all base utilities.
+Download the Detect 11.4.2 JAR into `/opt/blackduck/`. Remove all old apt-based layers.
 
-### 1.1 Switch base image
+- [x] Change `FROM debian:trixie` to `FROM fedora:44`
+- [x] Replace apt system packages RUN block with `dnf update -y && dnf install -y git curl wget vim zip unzip tar java-21-openjdk-devel which findutils procps-ng && dnf clean all`
+- [x] Update Detect JAR download to 11.4.2: `wget -O /opt/blackduck/detect-11.4.2.jar https://repo.blackduck.com/bds-integrations-release/com/blackduck/integration/detect/11.4.2/detect-11.4.2.jar`
+- [x] Remove all remaining `apt-get` lines from the Dockerfile
 
-```dockerfile
-FROM fedora:44
-```
+### Task 2: Add JavaScript toolchain (npm, pnpm, yarn, lerna)
 
-### 1.2 Replace apt-get with dnf
-
-Replace every `apt-get` call with `dnf`. Key Fedora package name differences:
-
-| Debian name | Fedora equivalent |
-|------------|-------------------|
-| `openjdk-21-jdk` | `java-21-openjdk-devel` |
-| `nodejs` | `nodejs` (same, in Fedora repos) |
-| `npm` | `npm` (included with nodejs or separate) |
-| `git` | `git` |
-| `curl wget vim zip` | same names |
-
-Initial system layer:
-```dockerfile
-RUN dnf update -y && \
-    dnf install -y \
-        git curl wget vim zip unzip tar \
-        java-21-openjdk-devel \
-        which findutils procps-ng && \
-    dnf clean all
-```
-
-### 1.3 Update Detect JAR
-
-```dockerfile
-RUN mkdir -p /opt/blackduck && \
-    wget -O /opt/blackduck/detect-11.4.2.jar \
-    https://repo.blackduck.com/bds-integrations-release/com/blackduck/integration/detect/11.4.2/detect-11.4.2.jar
-```
-
----
-
-## Phase 2 — Package Manager Toolchain Installation
-
-Each PM gets its own clearly-labeled Dockerfile section. Order is arbitrary; within a section, group into as few RUN blocks as needed for readability while still preserving layer-cache granularity.
-
-### 2.1 JavaScript / Node.js (npm, pnpm, yarn, lerna)
-
-```dockerfile
-# --- JavaScript / Node.js ---
-RUN dnf install -y nodejs npm && dnf clean all
-RUN npm install -g pnpm yarn lerna
-```
-
+Install Node.js and npm via `dnf`. Install pnpm, yarn, and lerna globally via npm.
 Detectors covered: NPM Package Lock, NPM CLI, Pnpm Lock, Yarn Lock, Lerna CLI.
 
-### 2.2 Python ecosystem (pip, pipenv, poetry, setuptools, uv, conda)
+- [ ] Add `RUN dnf install -y nodejs npm && dnf clean all`
+- [ ] Add `RUN npm install -g pnpm yarn lerna`
 
-```dockerfile
-# --- Python ---
-RUN dnf install -y python3 python3-pip python3-devel && dnf clean all
-RUN pip3 install --no-cache-dir pipenv poetry uv
-# Miniconda (for conda CLI detector)
-RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
-    bash /tmp/miniconda.sh -b -p /opt/miniconda && \
-    rm /tmp/miniconda.sh
-ENV PATH="/opt/miniconda/bin:$PATH"
-```
+### Task 3: Add Python toolchain (pip, pipenv, poetry, uv, conda)
 
-Detectors covered: PIP Native Inspector, PIP Requirements Parse, Pipfile Lock, Pipenv CLI, Poetry Lock, Setuptools CLI, UV CLI, UV Lock, Conda CLI.
+Install Python 3 + pip via dnf. Install pipenv, poetry, and uv via pip3.
+Install Miniconda for the conda CLI detector and add `/opt/miniconda/bin` to PATH.
+Detectors covered: PIP, Pipfile Lock, Pipenv CLI, Poetry Lock, Setuptools, UV CLI, UV Lock, Conda CLI.
 
-### 2.3 Java / JVM — Maven, Gradle, SBT (Scala)
+- [ ] Add `RUN dnf install -y python3 python3-pip python3-devel && dnf clean all`
+- [ ] Add `RUN pip3 install --no-cache-dir pipenv poetry uv`
+- [ ] Add Miniconda download and silent install into `/opt/miniconda`
+- [ ] Add `ENV PATH="/opt/miniconda/bin:$PATH"`
 
-Java 21 is already installed in Phase 1.
+### Task 4: Add JVM toolchain (Maven, Gradle, SBT)
 
-```dockerfile
-# --- Maven ---
-RUN dnf install -y maven && dnf clean all
+Java 21 is already installed in Task 1. Install Maven via dnf. Download and install Gradle 8.13
+manually (no Fedora package). Download and install SBT 1.10.11 from GitHub releases.
+Detectors covered: Maven CLI, Gradle Native Inspector, Sbt Native Inspector, Ivy Build Parse.
 
-# --- Gradle (no Fedora package, install via direct download) ---
-ARG GRADLE_VERSION=8.13
-RUN wget -q https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -O /tmp/gradle.zip && \
-    unzip -q /tmp/gradle.zip -d /opt && \
-    ln -s /opt/gradle-${GRADLE_VERSION}/bin/gradle /usr/local/bin/gradle && \
-    rm /tmp/gradle.zip
+- [ ] Add `RUN dnf install -y maven && dnf clean all`
+- [ ] Add ARG GRADLE_VERSION=8.13 and RUN to wget Gradle zip, unzip into /opt, symlink to /usr/local/bin/gradle, remove zip
+- [ ] Add RUN to curl SBT 1.10.11 tgz from GitHub, extract to /opt, symlink to /usr/local/bin/sbt
 
-# --- SBT (Scala Build Tool) ---
-RUN curl -L https://github.com/sbt/sbt/releases/download/v1.10.11/sbt-1.10.11.tgz | \
-    tar xz -C /opt && \
-    ln -s /opt/sbt/bin/sbt /usr/local/bin/sbt
-```
+### Task 5: Add Go and Rust/Cargo toolchains
 
-Detectors covered: Gradle Native Inspector, Maven CLI, Sbt Native Inspector, Ivy Build Parse.
+Install Go via dnf. Install Rust toolchain via rustup (non-interactive). Add cargo to PATH.
+Detectors covered: GoMod CLI, Go Mod File, Cargo CLI, Cargo Lock.
 
-### 2.4 Go
+- [ ] Add `RUN dnf install -y golang && dnf clean all`
+- [ ] Add `RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path`
+- [ ] Add `ENV PATH="/root/.cargo/bin:$PATH"`
 
-```dockerfile
-# --- Go ---
-RUN dnf install -y golang && dnf clean all
-```
+### Task 6: Add .NET SDK (NuGet)
 
-Detectors covered: GoMod CLI, Go Mod File.
-
-### 2.5 Rust / Cargo
-
-```dockerfile
-# --- Rust / Cargo ---
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    sh -s -- -y --no-modify-path
-ENV PATH="/root/.cargo/bin:$PATH"
-```
-
-Detectors covered: Cargo CLI, Cargo Lock.
-
-### 2.6 C# / .NET (NuGet)
-
-Microsoft packages for Fedora require the Microsoft repo:
-
-```dockerfile
-# --- .NET SDK ---
-RUN curl -sSL https://packages.microsoft.com/config/fedora/$(rpm -E %fedora)/prod.repo \
-    -o /etc/yum.repos.d/microsoft-prod.repo
-RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc && \
-    dnf install -y dotnet-sdk-9.0 && dnf clean all
-```
-
+Add the Microsoft package repo for Fedora, import the GPG key, and install `dotnet-sdk-9.0`.
 Detectors covered: NuGet Solution Native Inspector, NuGet Project Native Inspector.
 
-### 2.7 Ruby + Bundler
-
-```dockerfile
-# --- Ruby + Bundler ---
-RUN dnf install -y ruby ruby-devel rubygems && dnf clean all
-RUN gem install bundler
-```
-
-Detectors covered: Gemfile Lock, Gemspec Parse.
-
-### 2.8 PHP + Composer
-
-```dockerfile
-# --- PHP + Composer ---
-RUN dnf install -y php php-cli php-json && dnf clean all
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-```
-
-Detectors covered: Composer Lock.
-
-### 2.9 C/C++ — Conan
-
-```dockerfile
-# --- Conan (C/C++) ---
-RUN pip3 install --no-cache-dir conan
-```
-
-Detectors covered: Conan 1 CLI, Conan 2 CLI, Conan Lock.
-
-### 2.10 Dart
-
-```dockerfile
-# --- Dart ---
-ARG DART_VERSION=3.7.3
-RUN wget -q https://storage.googleapis.com/dart-archive/channels/stable/release/${DART_VERSION}/linux_packages/dart_${DART_VERSION}-1_amd64.rpm \
-    -O /tmp/dart.rpm && \
-    rpm -i /tmp/dart.rpm && \
-    rm /tmp/dart.rpm
-```
-
-Detectors covered: Dart CLI, Dart PubSpec Lock.
-
-### 2.11 Erlang + Rebar3
-
-```dockerfile
-# --- Erlang + Rebar3 ---
-RUN dnf install -y erlang && dnf clean all
-RUN wget -q https://s3.amazonaws.com/rebar3/rebar3 -O /usr/local/bin/rebar3 && \
-    chmod +x /usr/local/bin/rebar3
-```
-
-Detectors covered: Erlang Rebar CLI.
-
-### 2.12 OCaml + Opam
-
-```dockerfile
-# --- OCaml + Opam ---
-RUN dnf install -y opam && dnf clean all
-RUN opam init --disable-sandboxing -y && eval $(opam env)
-```
-
-Detectors covered: OCaml Opam CLI, OCaml Opam Lock.
-
-### 2.13 Perl + CPAN
-
-```dockerfile
-# --- Perl + CPAN ---
-RUN dnf install -y perl perl-CPAN perl-App-cpanminus && dnf clean all
-```
-
-Detectors covered: Perl CPAN CLI.
-
-### 2.14 R + Packrat
-
-```dockerfile
-# --- R ---
-RUN dnf install -y R && dnf clean all
-```
-
-Detectors covered: R Packrat Lock.
-
-### 2.15 Bazel
-
-```dockerfile
-# --- Bazel ---
-ARG BAZEL_VERSION=8.2.1
-RUN wget -q https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-linux-x86_64 \
-    -O /usr/local/bin/bazel && \
-    chmod +x /usr/local/bin/bazel
-```
-
-Detectors covered: Bazel CLI.
-
-### 2.16 Swift (optional, large ~2GB layer)
-
-Swift for Linux is available but adds ~2 GB. Include as commented-out section for opt-in:
-
-```dockerfile
-# --- Swift (optional, ~2GB) ---
-# ARG SWIFT_VERSION=5.10.1
-# RUN wget -q https://swift.org/builds/swift-${SWIFT_VERSION}-release/ubi9/swift-${SWIFT_VERSION}-RELEASE/swift-${SWIFT_VERSION}-RELEASE-ubi9.tar.gz ...
-```
-
-Detectors covered (when enabled): Swift CLI, Swift Lock.
-
-### 2.17 Bitbake (documentation only)
-
-Bitbake requires a Yocto build environment that is impractical inside a general container (requires matching host kernel, large build dependencies, sourced environment scripts). Include a commented stub with a pointer to the Detect Bitbake setup docs. No toolchain installed by default.
-
----
-
-## Phase 3 — Scan Targets
-
-### 3.1 Local repo structure
-
-Create `scan_targets/` directory in the repo with one subdirectory per package manager. Each contains a `README.md` with:
-- chosen project name and URL
-- why it was chosen
-- pre-scan steps (e.g., `npm install`, `pip install -r requirements.txt`)
-- expected Detect flags
-
-```
-scan_targets/
-├── npm/README.md          → expressjs/express
-├── pnpm/README.md         → vitejs/vite
-├── yarn/README.md         → facebook/jest
-├── pip/README.md          → psf/requests
-├── poetry/README.md       → python-poetry/poetry
-├── pipenv/README.md       → pypa/pipenv
-├── uv/README.md           → astral-sh/ruff
-├── conda/README.md        → anaconda-platform/anaconda-client
-├── maven/README.md        → spring-projects/spring-petclinic
-├── gradle/README.md       → square/okhttp
-├── sbt/README.md          → scala/scala-parser-combinators
-├── go/README.md           → cli/cli
-├── cargo/README.md        → sharkdp/bat
-├── nuget/README.md        → dotnet/eShopOnWeb
-├── gemfile/README.md      → sinatra/sinatra
-├── composer/README.md     → laravel/laravel
-├── conan/README.md        → conan-io/examples
-├── dart/README.md         → dart-lang/pub
-├── bazel/README.md        → abseil/abseil-cpp
-├── erlang/README.md       → ninenines/cowboy
-├── ocaml/README.md        → mirage/mirage
-├── perl/README.md         → libwww-perl/libwww-perl
-├── r/README.md            → rstudio/shiny (packrat.lock present)
-└── bitbake/README.md      → documentation only
-```
-
-### 3.2 Clone targets in Dockerfile
-
-One `RUN git clone` block per PM, labeled clearly. Use `--depth=1` on all clones to minimize image size:
-
-```dockerfile
-# --- Scan Targets ---
-RUN git clone --depth=1 https://github.com/expressjs/express /opt/scan_targets/npm/express
-RUN git clone --depth=1 https://github.com/vitejs/vite /opt/scan_targets/pnpm/vite
-RUN git clone --depth=1 https://github.com/facebook/jest /opt/scan_targets/yarn/jest
-RUN git clone --depth=1 https://github.com/psf/requests /opt/scan_targets/pip/requests
-RUN git clone --depth=1 https://github.com/python-poetry/poetry /opt/scan_targets/poetry/poetry
-RUN git clone --depth=1 https://github.com/pypa/pipenv /opt/scan_targets/pipenv/pipenv
-RUN git clone --depth=1 https://github.com/astral-sh/ruff /opt/scan_targets/uv/ruff
-RUN git clone --depth=1 https://github.com/Anaconda-Platform/anaconda-client /opt/scan_targets/conda/anaconda-client
-RUN git clone --depth=1 https://github.com/spring-projects/spring-petclinic /opt/scan_targets/maven/spring-petclinic
-RUN git clone --depth=1 https://github.com/square/okhttp /opt/scan_targets/gradle/okhttp
-RUN git clone --depth=1 https://github.com/scala/scala-parser-combinators /opt/scan_targets/sbt/scala-parser-combinators
-RUN git clone --depth=1 https://github.com/cli/cli /opt/scan_targets/go/cli
-RUN git clone --depth=1 https://github.com/sharkdp/bat /opt/scan_targets/cargo/bat
-RUN git clone --depth=1 https://github.com/dotnet-architecture/eShopOnWeb /opt/scan_targets/nuget/eShopOnWeb
-RUN git clone --depth=1 https://github.com/sinatra/sinatra /opt/scan_targets/gemfile/sinatra
-RUN git clone --depth=1 https://github.com/laravel/laravel /opt/scan_targets/composer/laravel
-RUN git clone --depth=1 https://github.com/conan-io/examples /opt/scan_targets/conan/examples
-RUN git clone --depth=1 https://github.com/dart-lang/pub /opt/scan_targets/dart/pub
-RUN git clone --depth=1 https://github.com/abseil/abseil-cpp /opt/scan_targets/bazel/abseil-cpp
-RUN git clone --depth=1 https://github.com/ninenines/cowboy /opt/scan_targets/erlang/cowboy
-RUN git clone --depth=1 https://github.com/mirage/mirage /opt/scan_targets/ocaml/mirage
-RUN git clone --depth=1 https://github.com/libwww-perl/libwww-perl /opt/scan_targets/perl/libwww-perl
-RUN git clone --depth=1 https://github.com/rstudio/shiny /opt/scan_targets/r/shiny
-```
-
----
-
-## Phase 4 — Wrapper Script (`scan.sh`)
-
-**File:** `scan.sh` (replaces `detect.sh`)
-
-### Interface
-
-```
-Usage: scan.sh [OPTIONS]
-
-Environment variables (standard Detect):
-  BLACKDUCK_URL        BD SCA instance URL
-  BLACKDUCK_API_TOKEN  BD SCA API token
-
-Options:
-  --url URL            Override BLACKDUCK_URL
-  --token TOKEN        Override BLACKDUCK_API_TOKEN
-  --all                Run all supported package managers
-  --pm PM              Run single package manager (e.g. --pm npm)
-  --detect-version V   Detect JAR version tag used in project names (default: 11.4.2)
-  --trust-cert         Pass --blackduck.trust.cert=true
-  -h, --help           Show this help
-
-Package manager shortcuts:
-  --npm, --pnpm, --yarn, --pip, --poetry, --pipenv, --uv, --conda,
-  --maven, --gradle, --sbt, --go, --cargo, --nuget, --gemfile,
-  --composer, --conan, --dart, --bazel, --erlang, --ocaml, --perl, --r
-```
-
-### Project naming convention
-
-`<pm>-detect-<detect-version>-test`
-
-Examples: `npm-detect-11.4.2-test`, `maven-detect-11.4.2-test`, `bazel-detect-11.4.2-test`
-
-### Implementation sketch
-
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-DETECT_VERSION="11.4.2"
-DETECT_JAR="/opt/blackduck/detect-${DETECT_VERSION}.jar"
-SCAN_ROOT="/opt/scan_targets"
-BD_URL="${BLACKDUCK_URL:-}"
-BD_TOKEN="${BLACKDUCK_API_TOKEN:-}"
-TRUST_CERT="false"
-
-run_scan() {
-    local pm="$1"
-    local source_path="$2"
-    local project_name="${pm}-detect-${DETECT_VERSION}-test"
-    echo "=== Scanning: $pm → $project_name ==="
-    java -jar "$DETECT_JAR" \
-        --blackduck.url="$BD_URL" \
-        --blackduck.api.token="$BD_TOKEN" \
-        --blackduck.trust.cert="$TRUST_CERT" \
-        --detect.source.path="$source_path" \
-        --detect.project.name="$project_name" \
-        --detect.project.version.name="${DETECT_VERSION}" \
-        --detect.tools=DETECTOR \
-        --detect.detector.search.depth=2 \
-        --detect.detector.search.continue=true
-}
-
-declare -A PM_PATHS=(
-    [npm]="$SCAN_ROOT/npm/express"
-    [pnpm]="$SCAN_ROOT/pnpm/vite"
-    [yarn]="$SCAN_ROOT/yarn/jest"
-    [pip]="$SCAN_ROOT/pip/requests"
-    [poetry]="$SCAN_ROOT/poetry/poetry"
-    [pipenv]="$SCAN_ROOT/pipenv/pipenv"
-    [uv]="$SCAN_ROOT/uv/ruff"
-    [conda]="$SCAN_ROOT/conda/anaconda-client"
-    [maven]="$SCAN_ROOT/maven/spring-petclinic"
-    [gradle]="$SCAN_ROOT/gradle/okhttp"
-    [sbt]="$SCAN_ROOT/sbt/scala-parser-combinators"
-    [go]="$SCAN_ROOT/go/cli"
-    [cargo]="$SCAN_ROOT/cargo/bat"
-    [nuget]="$SCAN_ROOT/nuget/eShopOnWeb"
-    [gemfile]="$SCAN_ROOT/gemfile/sinatra"
-    [composer]="$SCAN_ROOT/composer/laravel"
-    [conan]="$SCAN_ROOT/conan/examples"
-    [dart]="$SCAN_ROOT/dart/pub"
-    [bazel]="$SCAN_ROOT/bazel/abseil-cpp"
-    [erlang]="$SCAN_ROOT/erlang/cowboy"
-    [ocaml]="$SCAN_ROOT/ocaml/mirage"
-    [perl]="$SCAN_ROOT/perl/libwww-perl"
-    [r]="$SCAN_ROOT/r/shiny"
-)
-```
-
----
-
-## Phase 5 — Supporting Files
-
-### 5.1 `detect.sh` → remove or keep as shim
-
-`scan.sh` is the new entry point. `detect.sh` can be removed or kept as a thin backward-compat shim pointing to `scan.sh`.
-
-### 5.2 Update `application.properties`
-
-Update JAR reference: `detect-11.2.1.jar` → `detect-11.4.2.jar`.
-
-### 5.3 Rewrite `README.md`
-
-Document: build command, `docker run` with env vars, `scan.sh --all` usage, per-PM examples, expected image size (~8–12 GB).
-
-### 5.4 Migrate `env.sh`
-
-`env.sh` uses `BD_HOST` / `BD_TOKEN`. Migrate to Detect's native env vars `BLACKDUCK_URL` / `BLACKDUCK_API_TOKEN`, or document both and map them in `scan.sh`.
-
----
-
-## Implementation Order (for agent loop execution)
-
-| Step | Task | Files |
-|------|------|-------|
-| 1 | Fedora base image + system packages | `Dockerfile` |
-| 2 | Detect 11.4.2 JAR download | `Dockerfile` |
-| 3 | JS toolchain (Node.js, pnpm, yarn, lerna) | `Dockerfile` |
-| 4 | Python toolchain (pip, pipenv, poetry, uv, conda/Miniconda) | `Dockerfile` |
-| 5 | JVM toolchain (Maven, Gradle, SBT) | `Dockerfile` |
-| 6 | Go | `Dockerfile` |
-| 7 | Rust / Cargo | `Dockerfile` |
-| 8 | .NET SDK (NuGet) | `Dockerfile` |
-| 9 | Ruby + Bundler | `Dockerfile` |
-| 10 | PHP + Composer | `Dockerfile` |
-| 11 | Conan (C/C++) | `Dockerfile` |
-| 12 | Dart | `Dockerfile` |
-| 13 | Erlang + Rebar3 | `Dockerfile` |
-| 14 | OCaml + Opam | `Dockerfile` |
-| 15 | Perl + CPAN | `Dockerfile` |
-| 16 | R | `Dockerfile` |
-| 17 | Bazel | `Dockerfile` |
-| 18 | Scan target git clones (23 repos) | `Dockerfile` |
-| 19 | Local `scan_targets/` dirs + per-PM READMEs | repo |
-| 20 | `scan.sh` wrapper script | `scan.sh` |
-| 21 | Update `application.properties`, `env.sh`, `README.md` | config |
-| 22 | `docker build` smoke test | — |
-| 23 | Per-PM scan validation inside container | — |
-
----
-
-## Verification
-
-1. `docker build -t detect-lab:11.4.2 .` — completes without error.
-2. Toolchain check: `docker run --rm detect-lab:11.4.2 bash -c "java -version && node --version && python3 --version && go version && cargo --version && dotnet --version && ruby --version && php --version && dart --version && rebar3 version && bazel version"`
-3. Detect JAR: `docker run --rm detect-lab:11.4.2 java -jar /opt/blackduck/detect-11.4.2.jar --help`
-4. Single PM: `docker run --rm -e BLACKDUCK_URL=... -e BLACKDUCK_API_TOKEN=... detect-lab:11.4.2 bash -c "cd /opt/blackduck && ./scan.sh --npm"`
-5. Full sweep: `docker run --rm -e BLACKDUCK_URL=... -e BLACKDUCK_API_TOKEN=... detect-lab:11.4.2 bash -c "cd /opt/blackduck && ./scan.sh --all"`
-6. Confirm 23 projects in BD SCA instance, each named `<pm>-detect-11.4.2-test`.
-
----
-
-## Open Items
-
-- **eShopOnWeb**: verify `.sln`/`.csproj` is at a depth reachable with `--detect.detector.search.depth=2`.
-- **conda target**: `anaconda-client` has `environment.yml` but Conda CLI detector requires `conda env create` to have been run. Document pre-scan step in `scan_targets/conda/README.md`.
-- **R/packrat**: verify `rstudio/shiny` has a committed `packrat.lock`; if not, substitute `rstudio/packrat`.
-- **Bitbake**: no scan target cloned; README only. Yocto setup is impractical in a general container.
-- **Swift**: commented out by default (~2 GB layer); user can uncomment to enable.
-- **CocoaPods**: macOS/iOS only; not included.
-- **.NET on Fedora**: Microsoft repo `.repo` file URL uses `%fedora` RPM macro — validate this resolves correctly at build time for Fedora 44.
+- [ ] Add RUN to curl the Microsoft Fedora prod.repo file into /etc/yum.repos.d/microsoft-prod.repo using `$(rpm -E %fedora)` for the version
+- [ ] Add `RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc && dnf install -y dotnet-sdk-9.0 && dnf clean all`
+
+### Task 7: Add Ruby, PHP, and Conan toolchains
+
+Install Ruby + Bundler via dnf/gem. Install PHP + Composer via dnf and the Composer installer.
+Install Conan (C/C++) via pip3 (Python already installed in Task 3).
+Detectors covered: Gemfile Lock, Gemspec Parse, Composer Lock, Conan 1 CLI, Conan 2 CLI, Conan Lock.
+
+- [ ] Add `RUN dnf install -y ruby ruby-devel rubygems && dnf clean all`
+- [ ] Add `RUN gem install bundler`
+- [ ] Add `RUN dnf install -y php php-cli php-json && dnf clean all`
+- [ ] Add `RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer`
+- [ ] Add `RUN pip3 install --no-cache-dir conan`
+
+### Task 8: Add Dart, Erlang/Rebar3, and OCaml/Opam toolchains
+
+Install Dart via RPM package from dart.dev. Install Erlang via dnf and rebar3 binary from S3.
+Install OCaml + opam via dnf and run `opam init --disable-sandboxing -y`.
+Detectors covered: Dart CLI, Dart PubSpec Lock, Erlang Rebar CLI, OCaml Opam CLI, OCaml Opam Lock.
+
+- [ ] Add ARG DART_VERSION=3.7.3 and RUN to wget the Dart amd64 RPM from dart-archive on GCS, rpm -i it, remove it
+- [ ] Add `RUN dnf install -y erlang && dnf clean all`
+- [ ] Add `RUN wget -q https://s3.amazonaws.com/rebar3/rebar3 -O /usr/local/bin/rebar3 && chmod +x /usr/local/bin/rebar3`
+- [ ] Add `RUN dnf install -y opam && dnf clean all`
+- [ ] Add `RUN opam init --disable-sandboxing -y`
+
+### Task 9: Add Perl, R, and Bazel toolchains; add Swift and Bitbake stubs
+
+Install Perl + cpanm via dnf. Install R via dnf. Download Bazel 8.2.1 binary from GitHub releases.
+Add commented-out Swift block (opt-in, ~2 GB). Add commented Bitbake stub with documentation note.
+Detectors covered: Perl CPAN CLI, R Packrat Lock, Bazel CLI.
+
+- [ ] Add `RUN dnf install -y perl perl-CPAN perl-App-cpanminus && dnf clean all`
+- [ ] Add `RUN dnf install -y R && dnf clean all`
+- [ ] Add ARG BAZEL_VERSION=8.2.1 and RUN to wget Bazel binary into /usr/local/bin/bazel, chmod +x
+- [ ] Add commented-out Swift install block with ARG SWIFT_VERSION and wget from swift.org
+- [ ] Add commented Bitbake stub with a note that Yocto setup is impractical in a general container
+
+### Task 10: Add scan target git clones to Dockerfile
+
+Add one `RUN git clone --depth=1` per package manager into `/opt/scan_targets/<pm>/<repo>`.
+23 repos total. Remove the old scan target clones (Tiredful-API, detect source, express).
+
+- [ ] Remove old git clone lines (Tiredful-API, detect source, express)
+- [ ] Add clone: `expressjs/express` → `/opt/scan_targets/npm/express`
+- [ ] Add clone: `vitejs/vite` → `/opt/scan_targets/pnpm/vite`
+- [ ] Add clone: `facebook/jest` → `/opt/scan_targets/yarn/jest`
+- [ ] Add clone: `psf/requests` → `/opt/scan_targets/pip/requests`
+- [ ] Add clone: `python-poetry/poetry` → `/opt/scan_targets/poetry/poetry`
+- [ ] Add clone: `pypa/pipenv` → `/opt/scan_targets/pipenv/pipenv`
+- [ ] Add clone: `astral-sh/ruff` → `/opt/scan_targets/uv/ruff`
+- [ ] Add clone: `Anaconda-Platform/anaconda-client` → `/opt/scan_targets/conda/anaconda-client`
+- [ ] Add clone: `spring-projects/spring-petclinic` → `/opt/scan_targets/maven/spring-petclinic`
+- [ ] Add clone: `square/okhttp` → `/opt/scan_targets/gradle/okhttp`
+- [ ] Add clone: `scala/scala-parser-combinators` → `/opt/scan_targets/sbt/scala-parser-combinators`
+- [ ] Add clone: `cli/cli` → `/opt/scan_targets/go/cli`
+- [ ] Add clone: `sharkdp/bat` → `/opt/scan_targets/cargo/bat`
+- [ ] Add clone: `dotnet-architecture/eShopOnWeb` → `/opt/scan_targets/nuget/eShopOnWeb`
+- [ ] Add clone: `sinatra/sinatra` → `/opt/scan_targets/gemfile/sinatra`
+- [ ] Add clone: `laravel/laravel` → `/opt/scan_targets/composer/laravel`
+- [ ] Add clone: `conan-io/examples` → `/opt/scan_targets/conan/examples`
+- [ ] Add clone: `dart-lang/pub` → `/opt/scan_targets/dart/pub`
+- [ ] Add clone: `abseil/abseil-cpp` → `/opt/scan_targets/bazel/abseil-cpp`
+- [ ] Add clone: `ninenines/cowboy` → `/opt/scan_targets/erlang/cowboy`
+- [ ] Add clone: `mirage/mirage` → `/opt/scan_targets/ocaml/mirage`
+- [ ] Add clone: `libwww-perl/libwww-perl` → `/opt/scan_targets/perl/libwww-perl`
+- [ ] Add clone: `rstudio/shiny` → `/opt/scan_targets/r/shiny`
+
+### Task 11: Create local scan_targets/ directory with per-PM READMEs
+
+Create `scan_targets/<pm>/README.md` for each of the 23 package managers plus a `bitbake/README.md`
+stub. Each README must include: chosen project URL, why it was chosen, required pre-scan steps
+inside the container, and the recommended `scan.sh` invocation.
+
+- [ ] Create `scan_targets/npm/README.md` (expressjs/express)
+- [ ] Create `scan_targets/pnpm/README.md` (vitejs/vite)
+- [ ] Create `scan_targets/yarn/README.md` (facebook/jest)
+- [ ] Create `scan_targets/pip/README.md` (psf/requests)
+- [ ] Create `scan_targets/poetry/README.md` (python-poetry/poetry)
+- [ ] Create `scan_targets/pipenv/README.md` (pypa/pipenv)
+- [ ] Create `scan_targets/uv/README.md` (astral-sh/ruff)
+- [ ] Create `scan_targets/conda/README.md` (Anaconda-Platform/anaconda-client — note conda env create pre-step)
+- [ ] Create `scan_targets/maven/README.md` (spring-projects/spring-petclinic)
+- [ ] Create `scan_targets/gradle/README.md` (square/okhttp)
+- [ ] Create `scan_targets/sbt/README.md` (scala/scala-parser-combinators)
+- [ ] Create `scan_targets/go/README.md` (cli/cli)
+- [ ] Create `scan_targets/cargo/README.md` (sharkdp/bat)
+- [ ] Create `scan_targets/nuget/README.md` (dotnet-architecture/eShopOnWeb)
+- [ ] Create `scan_targets/gemfile/README.md` (sinatra/sinatra)
+- [ ] Create `scan_targets/composer/README.md` (laravel/laravel)
+- [ ] Create `scan_targets/conan/README.md` (conan-io/examples)
+- [ ] Create `scan_targets/dart/README.md` (dart-lang/pub)
+- [ ] Create `scan_targets/bazel/README.md` (abseil/abseil-cpp)
+- [ ] Create `scan_targets/erlang/README.md` (ninenines/cowboy)
+- [ ] Create `scan_targets/ocaml/README.md` (mirage/mirage)
+- [ ] Create `scan_targets/perl/README.md` (libwww-perl/libwww-perl)
+- [ ] Create `scan_targets/r/README.md` (rstudio/shiny — note packrat.lock verification)
+- [ ] Create `scan_targets/bitbake/README.md` (documentation stub only)
+
+### Task 12: Write scan.sh wrapper script
+
+Write `scan.sh` to replace `detect.sh` as the main entry point. Must support:
+- `BLACKDUCK_URL` / `BLACKDUCK_API_TOKEN` env vars (primary) and `--url` / `--token` overrides
+- `--all` to run all 23 PMs sequentially
+- Per-PM shortcuts (`--npm`, `--maven`, etc.) and `--pm <name>` generic form
+- `--trust-cert` flag, `--detect-version` override, `-h`/`--help`
+- Project naming: `<pm>-detect-11.4.2-test` with version from `--detect-version`
+- Each scan uses `--detect.tools=DETECTOR --detect.detector.search.depth=2 --detect.detector.search.continue=true`
+- `set -euo pipefail`; no shell injection (all args passed as separate words, no eval)
+
+- [ ] Write `scan.sh` with shebang `#!/usr/bin/env bash` and `set -euo pipefail`
+- [ ] Implement argument parsing (all flags listed above)
+- [ ] Implement `run_scan()` function using associative array dispatch table for PM→path mapping
+- [ ] Implement `--all` loop over all 23 PMs
+- [ ] Add `chmod u+x scan.sh` entry to Dockerfile (replacing the detect.sh chmod)
+- [ ] Add `COPY scan.sh .` to Dockerfile
+
+### Task 13: Update supporting files
+
+Update `application.properties`, `env.sh`, and `README.md` to reflect the new setup.
+Remove `detect.sh` (replaced by `scan.sh`).
+
+- [ ] Update `application.properties`: change `detect-11.2.1.jar` references to `detect-11.4.2.jar`
+- [ ] Update `env.sh`: rename `BD_HOST` → `BLACKDUCK_URL` and `BD_TOKEN` → `BLACKDUCK_API_TOKEN`
+- [ ] Remove `detect.sh` (or replace with one-line shim: `exec "$(dirname "$0")/scan.sh" "$@"`)
+- [ ] Rewrite `README.md`: document `docker build`, `docker run` with env vars, `scan.sh --all`, per-PM examples, expected image size (~8–12 GB)
+- [ ] Remove `COPY detect.sh .` from Dockerfile (already replaced by scan.sh in Task 12)

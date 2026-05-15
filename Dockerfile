@@ -1,36 +1,24 @@
-# Use Debian 13 (trixie) as the base image
-FROM debian:trixie
+FROM fedora:44
 
-# Install OpenJDK 21
-RUN apt-get update && \
-    apt-get install -y openjdk-21-jdk
+RUN dnf update -y && \
+    dnf install -y git curl wget vim zip unzip tar java-21-openjdk-devel which findutils procps-ng && \
+    dnf clean all
 
-# Install zip, curl, and wget
-RUN apt-get install -y zip curl wget
-
-# Install vim
-RUN apt-get install -y vim
-
-# Install Node.js and npm for NPM detector testing
-RUN apt-get install -y nodejs npm
-
-# Download and include detect-11.2.1.jar
 RUN mkdir /opt/blackduck && \
-    wget -O /opt/blackduck/detect-11.2.1.jar \
-    https://repo.blackduck.com/bds-integrations-release/com/blackduck/integration/detect/11.2.1/detect-11.2.1.jar
+    wget -O /opt/blackduck/detect-11.4.2.jar \
+    https://repo.blackduck.com/bds-integrations-release/com/blackduck/integration/detect/11.4.2/detect-11.4.2.jar
 
 # Clone the Tiredful-API repository
-RUN apt-get install -y git && \
-    git clone https://github.com/payatu/Tiredful-API \
-	/opt/scan_targets/tiredful-api
+RUN git clone https://github.com/payatu/Tiredful-API \
+    /opt/scan_targets/tiredful-api
 
 # Clone detect source code
 RUN git clone https://github.com/blackducksoftware/detect \
-	/opt/scan_targets/detect
+    /opt/scan_targets/detect
 
 # Clone Express.js as a sample NPM project for NPM detector testing
 RUN git clone https://github.com/expressjs/express \
-	/opt/scan_targets/express
+    /opt/scan_targets/express
 
 # Set the working directory
 WORKDIR /opt/blackduck
@@ -43,4 +31,4 @@ COPY detect.sh .
 
 RUN chmod u+x detect.sh
 
-# CMD ["java", "-jar", "detect-11.2.1.jar"]
+# CMD ["java", "-jar", "detect-11.4.2.jar"]
