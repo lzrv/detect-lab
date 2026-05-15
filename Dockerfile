@@ -4,6 +4,8 @@ RUN dnf update -y && \
     dnf install -y git curl wget vim zip unzip tar java-21-openjdk-devel which findutils procps-ng && \
     dnf clean all
 
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+
 RUN mkdir /opt/blackduck && \
     wget -O /opt/blackduck/detect-11.4.2.jar \
     https://repo.blackduck.com/bds-integrations-release/com/blackduck/integration/detect/11.4.2/detect-11.4.2.jar

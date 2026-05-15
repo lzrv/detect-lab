@@ -142,7 +142,7 @@ Add one `RUN git clone --depth=1` per package manager into `/opt/scan_targets/<p
 - [x] Add clone: `psf/requests` → `/opt/scan_targets/pip/requests`
 - [x] Add clone: `python-poetry/poetry` → `/opt/scan_targets/poetry/poetry`
 - [x] Add clone: `pypa/pipenv` → `/opt/scan_targets/pipenv/pipenv`
-- [x] Add clone: `astral-sh/ruff` → `/opt/scan_targets/uv/ruff`
+- [x] Add clone: `astral-sh/uv` → `/opt/scan_targets/uv/uv` (changed from ruff; uv's own repo has a uv.lock, better fit for UV Lock detector)
 - [x] Add clone: `Anaconda-Platform/anaconda-client` → `/opt/scan_targets/conda/anaconda-client`
 - [x] Add clone: `spring-projects/spring-petclinic` → `/opt/scan_targets/maven/spring-petclinic`
 - [x] Add clone: `square/okhttp` → `/opt/scan_targets/gradle/okhttp`
@@ -172,7 +172,7 @@ inside the container, and the recommended `scan.sh` invocation.
 - [x] Create `scan_targets/pip/README.md` (psf/requests)
 - [x] Create `scan_targets/poetry/README.md` (python-poetry/poetry)
 - [x] Create `scan_targets/pipenv/README.md` (pypa/pipenv)
-- [x] Create `scan_targets/uv/README.md` (astral-sh/ruff)
+- [x] Create `scan_targets/uv/README.md` (astral-sh/uv)
 - [x] Create `scan_targets/conda/README.md` (Anaconda-Platform/anaconda-client — note conda env create pre-step)
 - [x] Create `scan_targets/maven/README.md` (spring-projects/spring-petclinic)
 - [x] Create `scan_targets/gradle/README.md` (square/okhttp)

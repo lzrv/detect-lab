@@ -78,11 +78,17 @@ run_scan() {
       echo "  Run: conda env create -f ${PM_PATHS[conda]}/environment.yml -n detect-conda-test" >&2
       return 1
     fi
+    if [[ "${CONDA_DEFAULT_ENV:-}" != "detect-conda-test" ]]; then
+      echo "ERROR: conda environment 'detect-conda-test' is not activated." >&2
+      echo "  Run: conda activate detect-conda-test" >&2
+      return 1
+    fi
   fi
   if [[ "$pm" == "composer" ]]; then
     if [[ ! -f "${PM_PATHS[composer]}/composer.lock" ]]; then
-      echo "WARNING: composer.lock not found in ${PM_PATHS[composer]}." >&2
+      echo "ERROR: composer.lock not found in ${PM_PATHS[composer]}." >&2
       echo "  Run: composer install --no-scripts --no-plugins in that directory first." >&2
+      return 1
     fi
   fi
   local path="${PM_PATHS[$pm]}"
@@ -116,7 +122,7 @@ while [[ $# -gt 0 ]]; do
       BLACKDUCK_API_TOKEN="$2"; shift 2 ;;
     --detect-version)
       [[ $# -ge 2 ]] || { echo "ERROR: --detect-version requires a value" >&2; usage >&2; exit 1; }
-      [[ -n "$2" ]] || { echo "ERROR: --detect-version value must not be empty" >&2; exit 1; }
+      [[ "$2" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "ERROR: --detect-version must be a semver string (e.g. 11.4.2)" >&2; exit 1; }
       DETECT_VERSION="$2"
       DETECT_JAR="/opt/blackduck/detect-${DETECT_VERSION}.jar"
       shift 2 ;;
