@@ -56,6 +56,21 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 
 RUN pip3 install --no-cache-dir conan
 
+ARG DART_VERSION=3.7.3
+RUN wget -q "https://storage.googleapis.com/dart-archive/channels/stable/release/${DART_VERSION}/linux_packages/dart_${DART_VERSION}-1_amd64.rpm" \
+        -O /tmp/dart.rpm && \
+    rpm -i /tmp/dart.rpm && \
+    rm /tmp/dart.rpm
+
+RUN dnf install -y erlang && dnf clean all
+
+RUN wget -q https://s3.amazonaws.com/rebar3/rebar3 -O /usr/local/bin/rebar3 && \
+    chmod +x /usr/local/bin/rebar3
+
+RUN dnf install -y opam && dnf clean all
+
+RUN opam init --disable-sandboxing -y
+
 # Clone the Tiredful-API repository
 RUN git clone https://github.com/payatu/Tiredful-API \
     /opt/scan_targets/tiredful-api

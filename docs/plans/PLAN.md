@@ -112,11 +112,11 @@ Install Dart via RPM package from dart.dev. Install Erlang via dnf and rebar3 bi
 Install OCaml + opam via dnf and run `opam init --disable-sandboxing -y`.
 Detectors covered: Dart CLI, Dart PubSpec Lock, Erlang Rebar CLI, OCaml Opam CLI, OCaml Opam Lock.
 
-- [ ] Add ARG DART_VERSION=3.7.3 and RUN to wget the Dart amd64 RPM from dart-archive on GCS, rpm -i it, remove it
-- [ ] Add `RUN dnf install -y erlang && dnf clean all`
-- [ ] Add `RUN wget -q https://s3.amazonaws.com/rebar3/rebar3 -O /usr/local/bin/rebar3 && chmod +x /usr/local/bin/rebar3`
-- [ ] Add `RUN dnf install -y opam && dnf clean all`
-- [ ] Add `RUN opam init --disable-sandboxing -y`
+- [x] Add ARG DART_VERSION=3.7.3 and RUN to wget the Dart amd64 RPM from dart-archive on GCS, rpm -i it, remove it
+- [x] Add `RUN dnf install -y erlang && dnf clean all`
+- [x] Add `RUN wget -q https://s3.amazonaws.com/rebar3/rebar3 -O /usr/local/bin/rebar3 && chmod +x /usr/local/bin/rebar3`
+- [x] Add `RUN dnf install -y opam && dnf clean all`
+- [x] Add `RUN opam init --disable-sandboxing -y`
 
 ### Task 9: Add Perl, R, and Bazel toolchains; add Swift and Bitbake stubs
 
