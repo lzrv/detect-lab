@@ -1,3 +1,2 @@
-export BD_HOST=https://bd.example.com
-export BD_TOKEN=_TOKEN_
-export BD_PROJECT_NAME=test-$(date +%Y-%m-%d)
+export BLACKDUCK_URL=https://bd.example.com
+export BLACKDUCK_API_TOKEN=_TOKEN_

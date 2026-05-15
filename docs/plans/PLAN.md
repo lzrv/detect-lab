@@ -214,8 +214,8 @@ Write `scan.sh` to replace `detect.sh` as the main entry point. Must support:
 Update `application.properties`, `env.sh`, and `README.md` to reflect the new setup.
 Remove `detect.sh` (replaced by `scan.sh`).
 
-- [ ] Update `application.properties`: change `detect-11.2.1.jar` references to `detect-11.4.2.jar`
-- [ ] Update `env.sh`: rename `BD_HOST` → `BLACKDUCK_URL` and `BD_TOKEN` → `BLACKDUCK_API_TOKEN`
-- [ ] Remove `detect.sh` (or replace with one-line shim: `exec "$(dirname "$0")/scan.sh" "$@"`)
-- [ ] Rewrite `README.md`: document `docker build`, `docker run` with env vars, `scan.sh --all`, per-PM examples, expected image size (~8–12 GB)
-- [ ] Remove `COPY detect.sh .` from Dockerfile (already replaced by scan.sh in Task 12)
+- [x] Update `application.properties`: change `detect-11.2.1.jar` references to `detect-11.4.2.jar`
+- [x] Update `env.sh`: rename `BD_HOST` → `BLACKDUCK_URL` and `BD_TOKEN` → `BLACKDUCK_API_TOKEN`
+- [x] Remove `detect.sh` (or replace with one-line shim: `exec "$(dirname "$0")/scan.sh" "$@"`)
+- [x] Rewrite `README.md`: document `docker build`, `docker run` with env vars, `scan.sh --all`, per-PM examples, expected image size (~8–12 GB)
+- [x] Remove `COPY detect.sh .` from Dockerfile (already replaced by scan.sh in Task 12)
