@@ -102,6 +102,9 @@ run_scan() {
     "--detect.detector.search.depth=2"
     "--detect.detector.search.continue=true"
   )
+  if [[ "$pm" == "conda" ]]; then
+    args+=("--detect.conda.environment.name=detect-conda-test")
+  fi
   if [[ "$TRUST_CERT" == true ]]; then
     args+=("--blackduck.trust.cert=true")
   fi

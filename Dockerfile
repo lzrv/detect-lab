@@ -56,7 +56,7 @@ RUN dnf install -y php php-cli php-json && dnf clean all
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-RUN pip3 install --no-cache-dir conan
+RUN /usr/bin/pip3 install --no-cache-dir conan
 
 ARG DART_VERSION=3.7.3
 RUN wget -q "https://storage.googleapis.com/dart-archive/channels/stable/release/${DART_VERSION}/linux_packages/dart_${DART_VERSION}-1_amd64.rpm" \

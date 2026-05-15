@@ -47,7 +47,7 @@ Inside the container, use `scan.sh`:
 ./scan.sh --all --detect-version 11.5.0
 ```
 
-Each PM scan creates a Black Duck project named `<pm>-detect-11.4.2-test`.
+Each PM scan creates a Black Duck project named `<pm>-detect-<version>-test` (default: `<pm>-detect-11.4.2-test`).
 
 ## Supported package managers
 
