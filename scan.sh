@@ -72,6 +72,19 @@ run_scan() {
     echo "Valid PMs: ${ALL_PMS[*]}" >&2
     return 1
   fi
+  if [[ "$pm" == "conda" ]]; then
+    if ! conda env list 2>/dev/null | grep -q "detect-conda-test"; then
+      echo "ERROR: conda environment 'detect-conda-test' not found." >&2
+      echo "  Run: conda env create -f \${PM_PATHS[conda]}/environment.yml -n detect-conda-test" >&2
+      return 1
+    fi
+  fi
+  if [[ "$pm" == "composer" ]]; then
+    if [[ ! -f "${PM_PATHS[composer]}/composer.lock" ]]; then
+      echo "WARNING: composer.lock not found in ${PM_PATHS[composer]}." >&2
+      echo "  Run: composer install --no-scripts --no-plugins in that directory first." >&2
+    fi
+  fi
   local path="${PM_PATHS[$pm]}"
   local project_name="${pm}-detect-${DETECT_VERSION}-test"
   echo "==> Scanning $pm at $path (project: $project_name)"
@@ -103,6 +116,7 @@ while [[ $# -gt 0 ]]; do
       BLACKDUCK_API_TOKEN="$2"; shift 2 ;;
     --detect-version)
       [[ $# -ge 2 ]] || { echo "ERROR: --detect-version requires a value" >&2; usage >&2; exit 1; }
+      [[ -n "$2" ]] || { echo "ERROR: --detect-version value must not be empty" >&2; exit 1; }
       DETECT_VERSION="$2"
       DETECT_JAR="/opt/blackduck/detect-${DETECT_VERSION}.jar"
       shift 2 ;;
@@ -113,11 +127,11 @@ while [[ $# -gt 0 ]]; do
     --pm)
       [[ $# -ge 2 ]] || { echo "ERROR: --pm requires a value" >&2; usage >&2; exit 1; }
       [[ -n "${PM_PATHS[$2]+_}" ]] || { echo "ERROR: unknown package manager: $2" >&2; echo "Valid PMs: ${ALL_PMS[*]}" >&2; exit 1; }
-      PMS_TO_RUN+=("$2"); shift 2 ;;
+      [[ " ${PMS_TO_RUN[*]} " != *" $2 "* ]] && PMS_TO_RUN+=("$2"); shift 2 ;;
     --*)
       pm="${1#--}"
       if [[ -n "${PM_PATHS[$pm]+_}" ]]; then
-        PMS_TO_RUN+=("$pm"); shift
+        [[ " ${PMS_TO_RUN[*]} " != *" $pm "* ]] && PMS_TO_RUN+=("$pm"); shift
       else
         echo "ERROR: unknown option: $1" >&2
         usage >&2
