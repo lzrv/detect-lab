@@ -8,6 +8,10 @@ RUN mkdir /opt/blackduck && \
     wget -O /opt/blackduck/detect-11.4.2.jar \
     https://repo.blackduck.com/bds-integrations-release/com/blackduck/integration/detect/11.4.2/detect-11.4.2.jar
 
+RUN dnf install -y nodejs npm && dnf clean all
+
+RUN npm install -g pnpm yarn lerna
+
 # Clone the Tiredful-API repository
 RUN git clone https://github.com/payatu/Tiredful-API \
     /opt/scan_targets/tiredful-api

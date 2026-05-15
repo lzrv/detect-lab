@@ -53,8 +53,8 @@ Download the Detect 11.4.2 JAR into `/opt/blackduck/`. Remove all old apt-based 
 Install Node.js and npm via `dnf`. Install pnpm, yarn, and lerna globally via npm.
 Detectors covered: NPM Package Lock, NPM CLI, Pnpm Lock, Yarn Lock, Lerna CLI.
 
-- [ ] Add `RUN dnf install -y nodejs npm && dnf clean all`
-- [ ] Add `RUN npm install -g pnpm yarn lerna`
+- [x] Add `RUN dnf install -y nodejs npm && dnf clean all`
+- [x] Add `RUN npm install -g pnpm yarn lerna`
 
 ### Task 3: Add Python toolchain (pip, pipenv, poetry, uv, conda)
 
