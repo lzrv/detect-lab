@@ -124,11 +124,11 @@ Install Perl + cpanm via dnf. Install R via dnf. Download Bazel 8.2.1 binary fro
 Add commented-out Swift block (opt-in, ~2 GB). Add commented Bitbake stub with documentation note.
 Detectors covered: Perl CPAN CLI, R Packrat Lock, Bazel CLI.
 
-- [ ] Add `RUN dnf install -y perl perl-CPAN perl-App-cpanminus && dnf clean all`
-- [ ] Add `RUN dnf install -y R && dnf clean all`
-- [ ] Add ARG BAZEL_VERSION=8.2.1 and RUN to wget Bazel binary into /usr/local/bin/bazel, chmod +x
-- [ ] Add commented-out Swift install block with ARG SWIFT_VERSION and wget from swift.org
-- [ ] Add commented Bitbake stub with a note that Yocto setup is impractical in a general container
+- [x] Add `RUN dnf install -y perl perl-CPAN perl-App-cpanminus && dnf clean all`
+- [x] Add `RUN dnf install -y R && dnf clean all`
+- [x] Add ARG BAZEL_VERSION=8.2.1 and RUN to wget Bazel binary into /usr/local/bin/bazel, chmod +x
+- [x] Add commented-out Swift install block with ARG SWIFT_VERSION and wget from swift.org
+- [x] Add commented Bitbake stub with a note that Yocto setup is impractical in a general container
 
 ### Task 10: Add scan target git clones to Dockerfile
 

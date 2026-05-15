@@ -71,6 +71,26 @@ RUN dnf install -y opam && dnf clean all
 
 RUN opam init --disable-sandboxing -y
 
+RUN dnf install -y perl perl-CPAN perl-App-cpanminus && dnf clean all
+
+RUN dnf install -y R && dnf clean all
+
+ARG BAZEL_VERSION=8.2.1
+RUN wget -q "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-linux-x86_64" \
+        -O /usr/local/bin/bazel && \
+    chmod +x /usr/local/bin/bazel
+
+# Swift (~2 GB layer) — uncomment to enable
+# ARG SWIFT_VERSION=6.1
+# RUN wget -q "https://download.swift.org/swift-${SWIFT_VERSION}-release/ubi9/swift-${SWIFT_VERSION}-RELEASE/swift-${SWIFT_VERSION}-RELEASE-ubi9.tar.gz" \
+#         -O /tmp/swift.tar.gz && \
+#     tar -xz -C /opt -f /tmp/swift.tar.gz && \
+#     ln -s /opt/swift-${SWIFT_VERSION}-RELEASE-ubi9/usr/bin/swift /usr/local/bin/swift && \
+#     rm /tmp/swift.tar.gz
+
+# Bitbake/Yocto — not installed; Yocto setup is impractical in a general container.
+# See scan_targets/bitbake/README.md for manual setup instructions.
+
 # Clone the Tiredful-API repository
 RUN git clone https://github.com/payatu/Tiredful-API \
     /opt/scan_targets/tiredful-api
