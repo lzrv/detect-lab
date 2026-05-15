@@ -39,6 +39,13 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no
 
 ENV PATH="/root/.cargo/bin:$PATH"
 
+RUN curl -sSL https://packages.microsoft.com/config/fedora/$(rpm -E %fedora)/prod.repo \
+    -o /etc/yum.repos.d/microsoft-prod.repo
+
+RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc && \
+    dnf install -y dotnet-sdk-9.0 && \
+    dnf clean all
+
 # Clone the Tiredful-API repository
 RUN git clone https://github.com/payatu/Tiredful-API \
     /opt/scan_targets/tiredful-api

@@ -91,8 +91,8 @@ Detectors covered: GoMod CLI, Go Mod File, Cargo CLI, Cargo Lock.
 Add the Microsoft package repo for Fedora, import the GPG key, and install `dotnet-sdk-9.0`.
 Detectors covered: NuGet Solution Native Inspector, NuGet Project Native Inspector.
 
-- [ ] Add RUN to curl the Microsoft Fedora prod.repo file into /etc/yum.repos.d/microsoft-prod.repo using `$(rpm -E %fedora)` for the version
-- [ ] Add `RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc && dnf install -y dotnet-sdk-9.0 && dnf clean all`
+- [x] Add RUN to curl the Microsoft Fedora prod.repo file into /etc/yum.repos.d/microsoft-prod.repo using `$(rpm -E %fedora)` for the version
+- [x] Add `RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc && dnf install -y dotnet-sdk-9.0 && dnf clean all`
 
 ### Task 7: Add Ruby, PHP, and Conan toolchains
 
