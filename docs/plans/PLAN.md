@@ -135,30 +135,30 @@ Detectors covered: Perl CPAN CLI, R Packrat Lock, Bazel CLI.
 Add one `RUN git clone --depth=1` per package manager into `/opt/scan_targets/<pm>/<repo>`.
 23 repos total. Remove the old scan target clones (Tiredful-API, detect source, express).
 
-- [ ] Remove old git clone lines (Tiredful-API, detect source, express)
-- [ ] Add clone: `expressjs/express` → `/opt/scan_targets/npm/express`
-- [ ] Add clone: `vitejs/vite` → `/opt/scan_targets/pnpm/vite`
-- [ ] Add clone: `facebook/jest` → `/opt/scan_targets/yarn/jest`
-- [ ] Add clone: `psf/requests` → `/opt/scan_targets/pip/requests`
-- [ ] Add clone: `python-poetry/poetry` → `/opt/scan_targets/poetry/poetry`
-- [ ] Add clone: `pypa/pipenv` → `/opt/scan_targets/pipenv/pipenv`
-- [ ] Add clone: `astral-sh/ruff` → `/opt/scan_targets/uv/ruff`
-- [ ] Add clone: `Anaconda-Platform/anaconda-client` → `/opt/scan_targets/conda/anaconda-client`
-- [ ] Add clone: `spring-projects/spring-petclinic` → `/opt/scan_targets/maven/spring-petclinic`
-- [ ] Add clone: `square/okhttp` → `/opt/scan_targets/gradle/okhttp`
-- [ ] Add clone: `scala/scala-parser-combinators` → `/opt/scan_targets/sbt/scala-parser-combinators`
-- [ ] Add clone: `cli/cli` → `/opt/scan_targets/go/cli`
-- [ ] Add clone: `sharkdp/bat` → `/opt/scan_targets/cargo/bat`
-- [ ] Add clone: `dotnet-architecture/eShopOnWeb` → `/opt/scan_targets/nuget/eShopOnWeb`
-- [ ] Add clone: `sinatra/sinatra` → `/opt/scan_targets/gemfile/sinatra`
-- [ ] Add clone: `laravel/laravel` → `/opt/scan_targets/composer/laravel`
-- [ ] Add clone: `conan-io/examples` → `/opt/scan_targets/conan/examples`
-- [ ] Add clone: `dart-lang/pub` → `/opt/scan_targets/dart/pub`
-- [ ] Add clone: `abseil/abseil-cpp` → `/opt/scan_targets/bazel/abseil-cpp`
-- [ ] Add clone: `ninenines/cowboy` → `/opt/scan_targets/erlang/cowboy`
-- [ ] Add clone: `mirage/mirage` → `/opt/scan_targets/ocaml/mirage`
-- [ ] Add clone: `libwww-perl/libwww-perl` → `/opt/scan_targets/perl/libwww-perl`
-- [ ] Add clone: `rstudio/shiny` → `/opt/scan_targets/r/shiny`
+- [x] Remove old git clone lines (Tiredful-API, detect source, express)
+- [x] Add clone: `expressjs/express` → `/opt/scan_targets/npm/express`
+- [x] Add clone: `vitejs/vite` → `/opt/scan_targets/pnpm/vite`
+- [x] Add clone: `facebook/jest` → `/opt/scan_targets/yarn/jest`
+- [x] Add clone: `psf/requests` → `/opt/scan_targets/pip/requests`
+- [x] Add clone: `python-poetry/poetry` → `/opt/scan_targets/poetry/poetry`
+- [x] Add clone: `pypa/pipenv` → `/opt/scan_targets/pipenv/pipenv`
+- [x] Add clone: `astral-sh/ruff` → `/opt/scan_targets/uv/ruff`
+- [x] Add clone: `Anaconda-Platform/anaconda-client` → `/opt/scan_targets/conda/anaconda-client`
+- [x] Add clone: `spring-projects/spring-petclinic` → `/opt/scan_targets/maven/spring-petclinic`
+- [x] Add clone: `square/okhttp` → `/opt/scan_targets/gradle/okhttp`
+- [x] Add clone: `scala/scala-parser-combinators` → `/opt/scan_targets/sbt/scala-parser-combinators`
+- [x] Add clone: `cli/cli` → `/opt/scan_targets/go/cli`
+- [x] Add clone: `sharkdp/bat` → `/opt/scan_targets/cargo/bat`
+- [x] Add clone: `dotnet-architecture/eShopOnWeb` → `/opt/scan_targets/nuget/eShopOnWeb`
+- [x] Add clone: `sinatra/sinatra` → `/opt/scan_targets/gemfile/sinatra`
+- [x] Add clone: `laravel/laravel` → `/opt/scan_targets/composer/laravel`
+- [x] Add clone: `conan-io/examples` → `/opt/scan_targets/conan/examples`
+- [x] Add clone: `dart-lang/pub` → `/opt/scan_targets/dart/pub`
+- [x] Add clone: `abseil/abseil-cpp` → `/opt/scan_targets/bazel/abseil-cpp`
+- [x] Add clone: `ninenines/cowboy` → `/opt/scan_targets/erlang/cowboy`
+- [x] Add clone: `mirage/mirage` → `/opt/scan_targets/ocaml/mirage`
+- [x] Add clone: `libwww-perl/libwww-perl` → `/opt/scan_targets/perl/libwww-perl`
+- [x] Add clone: `rstudio/shiny` → `/opt/scan_targets/r/shiny`
 
 ### Task 11: Create local scan_targets/ directory with per-PM READMEs
 

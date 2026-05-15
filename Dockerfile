@@ -91,17 +91,29 @@ RUN wget -q "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSI
 # Bitbake/Yocto — not installed; Yocto setup is impractical in a general container.
 # See scan_targets/bitbake/README.md for manual setup instructions.
 
-# Clone the Tiredful-API repository
-RUN git clone https://github.com/payatu/Tiredful-API \
-    /opt/scan_targets/tiredful-api
-
-# Clone detect source code
-RUN git clone https://github.com/blackducksoftware/detect \
-    /opt/scan_targets/detect
-
-# Clone Express.js as a sample NPM project for NPM detector testing
-RUN git clone https://github.com/expressjs/express \
-    /opt/scan_targets/express
+RUN git clone --depth=1 https://github.com/expressjs/express /opt/scan_targets/npm/express
+RUN git clone --depth=1 https://github.com/vitejs/vite /opt/scan_targets/pnpm/vite
+RUN git clone --depth=1 https://github.com/facebook/jest /opt/scan_targets/yarn/jest
+RUN git clone --depth=1 https://github.com/psf/requests /opt/scan_targets/pip/requests
+RUN git clone --depth=1 https://github.com/python-poetry/poetry /opt/scan_targets/poetry/poetry
+RUN git clone --depth=1 https://github.com/pypa/pipenv /opt/scan_targets/pipenv/pipenv
+RUN git clone --depth=1 https://github.com/astral-sh/ruff /opt/scan_targets/uv/ruff
+RUN git clone --depth=1 https://github.com/Anaconda-Platform/anaconda-client /opt/scan_targets/conda/anaconda-client
+RUN git clone --depth=1 https://github.com/spring-projects/spring-petclinic /opt/scan_targets/maven/spring-petclinic
+RUN git clone --depth=1 https://github.com/square/okhttp /opt/scan_targets/gradle/okhttp
+RUN git clone --depth=1 https://github.com/scala/scala-parser-combinators /opt/scan_targets/sbt/scala-parser-combinators
+RUN git clone --depth=1 https://github.com/cli/cli /opt/scan_targets/go/cli
+RUN git clone --depth=1 https://github.com/sharkdp/bat /opt/scan_targets/cargo/bat
+RUN git clone --depth=1 https://github.com/dotnet-architecture/eShopOnWeb /opt/scan_targets/nuget/eShopOnWeb
+RUN git clone --depth=1 https://github.com/sinatra/sinatra /opt/scan_targets/gemfile/sinatra
+RUN git clone --depth=1 https://github.com/laravel/laravel /opt/scan_targets/composer/laravel
+RUN git clone --depth=1 https://github.com/conan-io/examples /opt/scan_targets/conan/examples
+RUN git clone --depth=1 https://github.com/dart-lang/pub /opt/scan_targets/dart/pub
+RUN git clone --depth=1 https://github.com/abseil/abseil-cpp /opt/scan_targets/bazel/abseil-cpp
+RUN git clone --depth=1 https://github.com/ninenines/cowboy /opt/scan_targets/erlang/cowboy
+RUN git clone --depth=1 https://github.com/mirage/mirage /opt/scan_targets/ocaml/mirage
+RUN git clone --depth=1 https://github.com/libwww-perl/libwww-perl /opt/scan_targets/perl/libwww-perl
+RUN git clone --depth=1 https://github.com/rstudio/shiny /opt/scan_targets/r/shiny
 
 # Set the working directory
 WORKDIR /opt/blackduck
