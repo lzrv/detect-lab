@@ -100,11 +100,11 @@ Install Ruby + Bundler via dnf/gem. Install PHP + Composer via dnf and the Compo
 Install Conan (C/C++) via pip3 (Python already installed in Task 3).
 Detectors covered: Gemfile Lock, Gemspec Parse, Composer Lock, Conan 1 CLI, Conan 2 CLI, Conan Lock.
 
-- [ ] Add `RUN dnf install -y ruby ruby-devel rubygems && dnf clean all`
-- [ ] Add `RUN gem install bundler`
-- [ ] Add `RUN dnf install -y php php-cli php-json && dnf clean all`
-- [ ] Add `RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer`
-- [ ] Add `RUN pip3 install --no-cache-dir conan`
+- [x] Add `RUN dnf install -y ruby ruby-devel rubygems && dnf clean all`
+- [x] Add `RUN gem install bundler`
+- [x] Add `RUN dnf install -y php php-cli php-json && dnf clean all`
+- [x] Add `RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer`
+- [x] Add `RUN pip3 install --no-cache-dir conan`
 
 ### Task 8: Add Dart, Erlang/Rebar3, and OCaml/Opam toolchains
 

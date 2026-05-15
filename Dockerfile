@@ -46,6 +46,16 @@ RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc && \
     dnf install -y dotnet-sdk-9.0 && \
     dnf clean all
 
+RUN dnf install -y ruby ruby-devel rubygems && dnf clean all
+
+RUN gem install bundler
+
+RUN dnf install -y php php-cli php-json && dnf clean all
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+RUN pip3 install --no-cache-dir conan
+
 # Clone the Tiredful-API repository
 RUN git clone https://github.com/payatu/Tiredful-API \
     /opt/scan_targets/tiredful-api
