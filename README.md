@@ -83,7 +83,7 @@ See `scan_targets/<pm>/README.md` for each PM's pre-scan steps and rationale.
 
 - **conda**: requires `conda env create` and `source /opt/miniconda/etc/profile.d/conda.sh && conda activate` before the Conda CLI detector fires. See `scan_targets/conda/README.md`.
 - **composer**: `composer.lock` is not committed in laravel/laravel. Run `composer install --no-scripts --no-plugins` in `/opt/scan_targets/composer/laravel` before scanning. See `scan_targets/composer/README.md`.
-- **trust.cert**: TLS certificate validation is disabled by default (`blackduck.trust.cert=true` in `application.properties`). The `--trust-cert` flag adds the same property at the CLI level and has no additional effect unless `application.properties` is modified.
+- **trust.cert**: TLS certificate validation is enabled by default (`blackduck.trust.cert` is commented out in `application.properties`). Use `--trust-cert` to disable it when connecting to a Black Duck instance with a self-signed certificate.
 - **Swift**: commented out in the Dockerfile (~2 GB layer). Uncomment `ARG SWIFT_VERSION` block to enable.
 - **Bitbake/Yocto**: not included (impractical in a general container). See `scan_targets/bitbake/README.md`.
 - **CocoaPods**: macOS/iOS only, not included.

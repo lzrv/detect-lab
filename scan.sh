@@ -75,7 +75,7 @@ run_scan() {
   if [[ "$pm" == "conda" ]]; then
     if ! conda env list 2>/dev/null | grep -q "detect-conda-test"; then
       echo "ERROR: conda environment 'detect-conda-test' not found." >&2
-      echo "  Run: conda env create -f \${PM_PATHS[conda]}/environment.yml -n detect-conda-test" >&2
+      echo "  Run: conda env create -f ${PM_PATHS[conda]}/environment.yml -n detect-conda-test" >&2
       return 1
     fi
   fi
@@ -169,7 +169,7 @@ if [[ ! -f "$DETECT_JAR" ]]; then
   exit 1
 fi
 
-failed_pms=()
+declare -a failed_pms=()
 for pm in "${PMS_TO_RUN[@]}"; do
   run_scan "$pm" || { echo "WARNING: scan for $pm failed, continuing..." >&2; failed_pms+=("$pm"); }
 done
