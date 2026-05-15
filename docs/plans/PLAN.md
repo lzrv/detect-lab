@@ -73,9 +73,9 @@ Java 21 is already installed in Task 1. Install Maven via dnf. Download and inst
 manually (no Fedora package). Download and install SBT 1.10.11 from GitHub releases.
 Detectors covered: Maven CLI, Gradle Native Inspector, Sbt Native Inspector, Ivy Build Parse.
 
-- [ ] Add `RUN dnf install -y maven && dnf clean all`
-- [ ] Add ARG GRADLE_VERSION=8.13 and RUN to wget Gradle zip, unzip into /opt, symlink to /usr/local/bin/gradle, remove zip
-- [ ] Add RUN to curl SBT 1.10.11 tgz from GitHub, extract to /opt, symlink to /usr/local/bin/sbt
+- [x] Add `RUN dnf install -y maven && dnf clean all`
+- [x] Add ARG GRADLE_VERSION=8.13 and RUN to wget Gradle zip, unzip into /opt, symlink to /usr/local/bin/gradle, remove zip
+- [x] Add RUN to curl SBT 1.10.11 tgz from GitHub, extract to /opt, symlink to /usr/local/bin/sbt
 
 ### Task 5: Add Go and Rust/Cargo toolchains
 
