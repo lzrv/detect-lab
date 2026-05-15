@@ -121,9 +121,9 @@ WORKDIR /opt/blackduck
 # Copy the application.properties file to the working directory
 COPY application.properties .
 
-# Copy detect.sh
-COPY detect.sh .
+# Copy scan.sh
+COPY scan.sh .
 
-RUN chmod u+x detect.sh
+RUN chmod u+x scan.sh
 
 # CMD ["java", "-jar", "detect-11.4.2.jar"]

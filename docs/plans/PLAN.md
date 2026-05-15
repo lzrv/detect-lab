@@ -202,12 +202,12 @@ Write `scan.sh` to replace `detect.sh` as the main entry point. Must support:
 - Each scan uses `--detect.tools=DETECTOR --detect.detector.search.depth=2 --detect.detector.search.continue=true`
 - `set -euo pipefail`; no shell injection (all args passed as separate words, no eval)
 
-- [ ] Write `scan.sh` with shebang `#!/usr/bin/env bash` and `set -euo pipefail`
-- [ ] Implement argument parsing (all flags listed above)
-- [ ] Implement `run_scan()` function using associative array dispatch table for PM→path mapping
-- [ ] Implement `--all` loop over all 23 PMs
-- [ ] Add `chmod u+x scan.sh` entry to Dockerfile (replacing the detect.sh chmod)
-- [ ] Add `COPY scan.sh .` to Dockerfile
+- [x] Write `scan.sh` with shebang `#!/usr/bin/env bash` and `set -euo pipefail`
+- [x] Implement argument parsing (all flags listed above)
+- [x] Implement `run_scan()` function using associative array dispatch table for PM→path mapping
+- [x] Implement `--all` loop over all 23 PMs
+- [x] Add `chmod u+x scan.sh` entry to Dockerfile (replacing the detect.sh chmod)
+- [x] Add `COPY scan.sh .` to Dockerfile
 
 ### Task 13: Update supporting files
 
