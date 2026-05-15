@@ -138,6 +138,8 @@ if [[ ${#PMS_TO_RUN[@]} -eq 0 ]]; then
   exit 1
 fi
 
+export BLACKDUCK_URL BLACKDUCK_API_TOKEN
+
 if [[ -z "$BLACKDUCK_URL" ]]; then
   echo "ERROR: BLACKDUCK_URL is not set. Use --url or set the environment variable." >&2
   exit 1

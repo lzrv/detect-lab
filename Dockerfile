@@ -126,6 +126,6 @@ COPY application.properties .
 # Copy scan.sh
 COPY scan.sh .
 
-RUN chmod u+x scan.sh
+RUN chmod +x scan.sh
 
 # CMD ["java", "-jar", "detect-11.4.2.jar"]
