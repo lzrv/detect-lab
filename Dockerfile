@@ -1,4 +1,4 @@
-FROM fedora:44
+FROM --platform=linux/amd64 fedora:44
 
 RUN dnf update -y && \
     dnf install -y git curl wget vim zip unzip tar java-21-openjdk-devel which findutils procps-ng && \
@@ -39,7 +39,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no
 
 ENV PATH="/root/.cargo/bin:$PATH"
 
-RUN curl -sSL https://packages.microsoft.com/config/fedora/$(rpm -E %fedora)/prod.repo \
+RUN curl -sSLf https://packages.microsoft.com/config/fedora/$(rpm -E %fedora)/prod.repo \
     -o /etc/yum.repos.d/microsoft-prod.repo
 
 RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc && \
@@ -71,6 +71,8 @@ RUN dnf install -y opam && dnf clean all
 
 RUN opam init --disable-sandboxing -y
 
+ENV PATH="/root/.opam/default/bin:$PATH"
+
 RUN dnf install -y perl perl-CPAN perl-App-cpanminus && dnf clean all
 
 RUN dnf install -y R && dnf clean all
@@ -97,7 +99,7 @@ RUN git clone --depth=1 https://github.com/facebook/jest /opt/scan_targets/yarn/
 RUN git clone --depth=1 https://github.com/psf/requests /opt/scan_targets/pip/requests
 RUN git clone --depth=1 https://github.com/python-poetry/poetry /opt/scan_targets/poetry/poetry
 RUN git clone --depth=1 https://github.com/pypa/pipenv /opt/scan_targets/pipenv/pipenv
-RUN git clone --depth=1 https://github.com/astral-sh/ruff /opt/scan_targets/uv/ruff
+RUN git clone --depth=1 https://github.com/astral-sh/uv /opt/scan_targets/uv/uv
 RUN git clone --depth=1 https://github.com/Anaconda-Platform/anaconda-client /opt/scan_targets/conda/anaconda-client
 RUN git clone --depth=1 https://github.com/spring-projects/spring-petclinic /opt/scan_targets/maven/spring-petclinic
 RUN git clone --depth=1 https://github.com/square/okhttp /opt/scan_targets/gradle/okhttp

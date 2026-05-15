@@ -20,7 +20,7 @@ declare -A PM_PATHS=(
   [pip]="/opt/scan_targets/pip/requests"
   [poetry]="/opt/scan_targets/poetry/poetry"
   [pipenv]="/opt/scan_targets/pipenv/pipenv"
-  [uv]="/opt/scan_targets/uv/ruff"
+  [uv]="/opt/scan_targets/uv/uv"
   [conda]="/opt/scan_targets/conda/anaconda-client"
   [maven]="/opt/scan_targets/maven/spring-petclinic"
   [gradle]="/opt/scan_targets/gradle/okhttp"
@@ -77,8 +77,6 @@ run_scan() {
   echo "==> Scanning $pm at $path (project: $project_name)"
   local -a args=(
     java -jar "${DETECT_JAR}"
-    "--blackduck.url=${BLACKDUCK_URL}"
-    "--blackduck.api.token=${BLACKDUCK_API_TOKEN}"
     "--detect.project.name=${project_name}"
     "--detect.source.path=${path}"
     "--detect.tools=DETECTOR"
@@ -98,10 +96,13 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     --url)
+      [[ $# -ge 2 ]] || { echo "ERROR: --url requires a value" >&2; usage >&2; exit 1; }
       BLACKDUCK_URL="$2"; shift 2 ;;
     --token)
+      [[ $# -ge 2 ]] || { echo "ERROR: --token requires a value" >&2; usage >&2; exit 1; }
       BLACKDUCK_API_TOKEN="$2"; shift 2 ;;
     --detect-version)
+      [[ $# -ge 2 ]] || { echo "ERROR: --detect-version requires a value" >&2; usage >&2; exit 1; }
       DETECT_VERSION="$2"
       DETECT_JAR="/opt/blackduck/detect-${DETECT_VERSION}.jar"
       shift 2 ;;
@@ -110,6 +111,8 @@ while [[ $# -gt 0 ]]; do
     --all)
       PMS_TO_RUN=("${ALL_PMS[@]}"); shift ;;
     --pm)
+      [[ $# -ge 2 ]] || { echo "ERROR: --pm requires a value" >&2; usage >&2; exit 1; }
+      [[ -n "${PM_PATHS[$2]+_}" ]] || { echo "ERROR: unknown package manager: $2" >&2; echo "Valid PMs: ${ALL_PMS[*]}" >&2; exit 1; }
       PMS_TO_RUN+=("$2"); shift 2 ;;
     --*)
       pm="${1#--}"
@@ -145,6 +148,17 @@ if [[ -z "$BLACKDUCK_API_TOKEN" ]]; then
   exit 1
 fi
 
+if [[ ! -f "$DETECT_JAR" ]]; then
+  echo "ERROR: $DETECT_JAR not found. Only detect-${DETECT_VERSION}.jar is baked into this image." >&2
+  exit 1
+fi
+
+failed_pms=()
 for pm in "${PMS_TO_RUN[@]}"; do
-  run_scan "$pm"
+  run_scan "$pm" || { echo "WARNING: scan for $pm failed, continuing..." >&2; failed_pms+=("$pm"); }
 done
+
+if [[ ${#failed_pms[@]} -gt 0 ]]; then
+  echo "ERROR: the following scans failed: ${failed_pms[*]}" >&2
+  exit 1
+fi

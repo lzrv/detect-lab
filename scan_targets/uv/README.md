@@ -1,13 +1,12 @@
-# uv Scan Target: astral-sh/ruff
+# uv Scan Target: astral-sh/uv
 
-**Repo:** https://github.com/astral-sh/ruff
-**Cloned to:** /opt/scan_targets/uv/ruff
+**Repo:** https://github.com/astral-sh/uv
+**Cloned to:** /opt/scan_targets/uv/uv
 
 ## Why this project
 
-Ruff is a Rust-based Python linter maintained by Astral (the same team behind uv). It uses
-uv for dependency management and has a committed `uv.lock` at the repo root, making it the
-natural target for the UV Lock and UV CLI detectors.
+The uv project (the package manager itself) manages its Python tooling with uv and has a
+committed `uv.lock` at the repo root, making it the natural target for the UV Lock detector.
 
 ## Pre-scan steps
 
@@ -15,7 +14,7 @@ No setup required. `uv.lock` is committed and parsed directly by the UV Lock det
 For CLI detection (uv must resolve the environment):
 
 ```
-cd /opt/scan_targets/uv/ruff
+cd /opt/scan_targets/uv/uv
 uv sync --frozen
 ```
 

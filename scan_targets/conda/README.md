@@ -17,6 +17,7 @@ running Detect:
 ```
 cd /opt/scan_targets/conda/anaconda-client
 conda env create -f environment.yml -n detect-conda-test --quiet
+source /opt/miniconda/etc/profile.d/conda.sh
 conda activate detect-conda-test
 ```
 
@@ -25,6 +26,7 @@ If the environment already exists from a prior run:
 ```
 conda env remove -n detect-conda-test -y
 conda env create -f environment.yml -n detect-conda-test --quiet
+source /opt/miniconda/etc/profile.d/conda.sh
 conda activate detect-conda-test
 ```
 
