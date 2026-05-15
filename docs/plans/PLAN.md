@@ -62,10 +62,10 @@ Install Python 3 + pip via dnf. Install pipenv, poetry, and uv via pip3.
 Install Miniconda for the conda CLI detector and add `/opt/miniconda/bin` to PATH.
 Detectors covered: PIP, Pipfile Lock, Pipenv CLI, Poetry Lock, Setuptools, UV CLI, UV Lock, Conda CLI.
 
-- [ ] Add `RUN dnf install -y python3 python3-pip python3-devel && dnf clean all`
-- [ ] Add `RUN pip3 install --no-cache-dir pipenv poetry uv`
-- [ ] Add Miniconda download and silent install into `/opt/miniconda`
-- [ ] Add `ENV PATH="/opt/miniconda/bin:$PATH"`
+- [x] Add `RUN dnf install -y python3 python3-pip python3-devel && dnf clean all`
+- [x] Add `RUN pip3 install --no-cache-dir pipenv poetry uv`
+- [x] Add Miniconda download and silent install into `/opt/miniconda`
+- [x] Add `ENV PATH="/opt/miniconda/bin:$PATH"`
 
 ### Task 4: Add JVM toolchain (Maven, Gradle, SBT)
 

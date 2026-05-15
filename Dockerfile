@@ -12,6 +12,16 @@ RUN dnf install -y nodejs npm && dnf clean all
 
 RUN npm install -g pnpm yarn lerna
 
+RUN dnf install -y python3 python3-pip python3-devel && dnf clean all
+
+RUN pip3 install --no-cache-dir pipenv poetry uv
+
+RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+    bash /tmp/miniconda.sh -b -p /opt/miniconda && \
+    rm /tmp/miniconda.sh
+
+ENV PATH="/opt/miniconda/bin:$PATH"
+
 # Clone the Tiredful-API repository
 RUN git clone https://github.com/payatu/Tiredful-API \
     /opt/scan_targets/tiredful-api
